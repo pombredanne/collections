@@ -912,7 +912,7 @@ set_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh)
     else if (ihigh > set_len(self))
         ihigh = set_len(self);
     
-    PyOrderedSetObject *so = (PyOrderedSetObject *)make_new_set(&PyOrderedSet_Type, NULL);
+    PyOrderedSetObject *so = (PyOrderedSetObject *)make_new_set(self->ob_type, NULL);
     if (so == NULL)
         return NULL;
     
@@ -949,7 +949,31 @@ set_ass_item(PyOrderedSetObject *self, Py_ssize_t i, PyObject *key)
 static int
 set_ass_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *other)
 {
-    return -1;
+    if (ilow < 0)
+        ilow = 0;
+    else if (ilow > set_len(self))
+        ilow = set_len(self);
+    if (ihigh < ilow)
+        ihigh = ilow;
+    else if (ihigh > set_len(self))
+        ihigh = set_len(self);
+
+    ordered_set old_set(self->oset);
+    set_clear_internal(self);
+
+    ordered_set_by_key &old_keyset = old_set.get<key_index>();
+    ordered_set_by_key::iterator it;
+    for (it = old_keyset.begin(); it < old_keyset.begin() + ilow; it++) {
+        ordered_set::value_type entry = *it;
+        set_add_key(self, entry.key);
+    }
+    set_update_internal(self, other);
+    for (it = old_keyset.begin() + ihigh; it < old_keyset.end(); it++) {
+        ordered_set::value_type entry = *it;
+        set_add_key(self, entry.key);
+    }
+
+    return 0;
 }
 
 static PyObject *
