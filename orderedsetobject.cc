@@ -1,4 +1,4 @@
-#include <Python/Python.h>
+#include <Python.h>
 #include <boost/tuple/tuple.hpp>
 #include "orderedsetobject.h"
 

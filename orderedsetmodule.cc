@@ -1,4 +1,4 @@
-#include <Python/Python.h>
+#include <Python.h>
 #include "orderedsetobject.h"
 
 static PyMethodDef module_methods[] = {

@@ -1,7 +1,7 @@
 #ifndef orderedset_orderedsetobject_h
 #define orderedset_orderedsetobject_h
 
-#include <Python/Python.h>
+#include <Python.h>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/random_access_index.hpp>
 #include <boost/multi_index/ordered_index.hpp>
