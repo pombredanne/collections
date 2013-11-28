@@ -900,6 +900,32 @@ set_item(PyOrderedSetObject *self, Py_ssize_t i)
     return set[i].key;
 }
 
+static PyObject *
+set_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh)
+{
+    if (ilow < 0)
+        ilow = 0;
+    else if (ilow > set_len(self))
+        ilow = set_len(self);
+    if (ihigh < ilow)
+        ihigh = ilow;
+    else if (ihigh > set_len(self))
+        ihigh = set_len(self);
+    
+    PyOrderedSetObject *so = (PyOrderedSetObject *)make_new_set(&PyOrderedSet_Type, NULL);
+    if (so == NULL)
+        return NULL;
+    
+    ordered_set_by_key &set = self->oset.get<key_index>();
+    ordered_set_by_key::iterator it;
+    for (it = set.begin() + ilow; it < set.begin() + ihigh; it++) {
+        ordered_set::value_type entry = *it;
+        set_add_key(so, entry.key);
+    }
+
+    return (PyObject *)so;
+}
+
 static int
 set_ass_item(PyOrderedSetObject *self, Py_ssize_t i, PyObject *key)
 {
@@ -918,6 +944,12 @@ set_ass_item(PyOrderedSetObject *self, Py_ssize_t i, PyObject *key)
         set.replace(set.begin() + i, ordered_set::value_type(key));
         return 0;
     }
+}
+
+static int
+set_ass_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *other)
+{
+    return -1;
 }
 
 static PyObject *
@@ -1050,9 +1082,9 @@ static PySequenceMethods set_as_sequence = {
     0,                          /* sq_concat */
     0,                          /* sq_repeat */
     (ssizeargfunc)set_item,     /* sq_item */
-    0,                          /* sq_slice */
+    (ssizessizeargfunc)set_slice, /* sq_slice */
     (ssizeobjargproc)set_ass_item, /* sq_ass_item */
-    0,                          /* sq_ass_slice */
+    (ssizessizeobjargproc)set_ass_slice, /* sq_ass_slice */
     (objobjproc)set_contains,   /* sq_contains */
 };
 
@@ -1063,9 +1095,9 @@ static PyMethodDef orderedset_methods[] = {
     {"clear", (PyCFunction)set_clear, METH_NOARGS, clear_doc},
     {"copy", (PyCFunction)set_copy, METH_NOARGS, copy_doc},
     {"discard", (PyCFunction)set_discard, METH_O, discard_doc},
-    {"index", (PyCFunction)set_index, METH_O, index_doc},
     {"difference", (PyCFunction)set_difference, METH_O, difference_doc},
     {"difference_update", (PyCFunction)set_difference_update, METH_O, difference_update_doc},
+    {"index", (PyCFunction)set_index, METH_O, index_doc},
     {"intersection",(PyCFunction)set_intersection, METH_O, intersection_doc},
     {"intersection_update",(PyCFunction)set_intersection_update, METH_O, intersection_update_doc},
     {"issubset", (PyCFunction)set_issubset, METH_O, issubset_doc},
