@@ -50,7 +50,6 @@ struct ordered_set_entry {
 };
 
 struct key_index{};
-struct value_index{};
 struct hash_index{};
 
 typedef multi_index_container<
@@ -58,12 +57,6 @@ typedef multi_index_container<
     indexed_by<
         random_access<
             tag<key_index>
-        >,
-
-        // sort by ordered_set_entry::operator<
-        ordered_unique<
-            tag<value_index>,
-            identity<ordered_set_entry>
         >,
 
         // hash by ordered_set_entry::hash
@@ -75,7 +68,6 @@ typedef multi_index_container<
 > ordered_set;
 
 typedef ordered_set::index<key_index>::type ordered_set_by_key;
-typedef ordered_set::index<value_index>::type ordered_set_by_value;
 typedef ordered_set::index<hash_index>::type ordered_set_by_hash;
 
 typedef struct _orderedsetobject {

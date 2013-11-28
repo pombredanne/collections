@@ -22,28 +22,36 @@ set_contains(PyOrderedSetObject *self, PyObject *key)
     return it != hashset.end();
 }
 
-//static PyObject *
-//set_index(PyOrderedSetObject *self, PyObject *key)
-//{
-//    long hash;
-//
-//    if (!PyString_CheckExact(key) ||
-//        (hash = ((PyStringObject *) key)->ob_shash) == -1) {
-//        hash = PyObject_Hash(key);
-//        if (hash == -1)
-//            return PyInt_FromLong(-1);
-//    }
-//
-//    ordered_set_by_hash &hashset = self->oset.get<hash_index>();
-//    ordered_set_by_hash::iterator it = hashset.find(hash);
-//
-//    if (it != hashset.end()) {
-//        ordered_set_by_key &set = self->oset.get<key_index>();
-//        ordered_set_by_key::iterator it2 = self->oset.project<key_index>(it);
-//        //...
-//    }
-//    return PyInt_FromLong(-1);
-//}
+static PyObject *
+set_index(PyOrderedSetObject *self, PyObject *key)
+{
+    long hash;
+
+    if (!PyString_CheckExact(key) ||
+        (hash = ((PyStringObject *) key)->ob_shash) == -1) {
+        hash = PyObject_Hash(key);
+        if (hash == -1) {
+            PyErr_SetString(PyExc_TypeError, "unhashable type");
+            return NULL;
+        }
+    }
+
+    ordered_set_by_hash &hashset = self->oset.get<hash_index>();
+    ordered_set_by_hash::iterator it = hashset.find(hash);
+
+    if (it != hashset.end()) {
+        ordered_set_by_key &set = self->oset.get<key_index>();
+        ordered_set_by_key::iterator it2 = self->oset.project<key_index>(it);
+        long n = std::distance(set.begin(), it2);
+        return PyInt_FromLong(n);
+    }
+    PyErr_SetString(PyExc_ValueError, "x is not in set");
+    return NULL;
+}
+
+PyDoc_STRVAR(index_doc,
+"Return index of value.\n"
+"Raises ValueError if the value is not present.");
 
 static int
 set_add_key(PyOrderedSetObject *self, PyObject *key)
@@ -388,7 +396,6 @@ make_new_set(PyTypeObject *type, PyObject *iterable)
 
         ordered_set::ctor_args_list args_list = boost::make_tuple(
             ordered_set_by_key::ctor_args(),
-            ordered_set_by_value::ctor_args(),
             ordered_set_by_hash::ctor_args());
         ordered_set set(args_list);
         so->oset = set;
@@ -1028,7 +1035,6 @@ set_init(PyOrderedSetObject *self, PyObject *args, PyObject *kwds)
 
     ordered_set::ctor_args_list args_list = boost::make_tuple(
         ordered_set_by_key::ctor_args(),
-        ordered_set_by_value::ctor_args(),
         ordered_set_by_hash::ctor_args());
     ordered_set set(args_list);
     self->oset = set;
@@ -1057,6 +1063,7 @@ static PyMethodDef orderedset_methods[] = {
     {"clear", (PyCFunction)set_clear, METH_NOARGS, clear_doc},
     {"copy", (PyCFunction)set_copy, METH_NOARGS, copy_doc},
     {"discard", (PyCFunction)set_discard, METH_O, discard_doc},
+    {"index", (PyCFunction)set_index, METH_O, index_doc},
     {"difference", (PyCFunction)set_difference, METH_O, difference_doc},
     {"difference_update", (PyCFunction)set_difference_update, METH_O, difference_update_doc},
     {"intersection",(PyCFunction)set_intersection, METH_O, intersection_doc},
