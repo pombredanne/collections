@@ -752,7 +752,7 @@ set_issubset(PyOrderedSetObject *self, PyObject *other)
 {
     if (!PyOrderedSet_Check(other)) {
         PyObject *tmp, *result;
-        tmp = make_new_set(&PyOrderedSet_Type, other);
+        tmp = make_new_set(self->ob_type, other);
         if (tmp == NULL)
             return NULL;
         result = set_issubset(self, tmp);
@@ -782,7 +782,7 @@ set_issuperset(PyOrderedSetObject *self, PyObject *other)
 {
     if (!PyOrderedSet_Check(other)) {
         PyObject *tmp, *result;
-        tmp = make_new_set(&PyOrderedSet_Type, other);
+        tmp = make_new_set(self->ob_type, other);
         if (tmp == NULL)
             return NULL;
         result = set_issuperset(self, tmp);
@@ -929,6 +929,11 @@ set_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh)
 static int
 set_ass_item(PyOrderedSetObject *self, Py_ssize_t i, PyObject *key)
 {
+    if (key != NULL) {
+        // don't support __setitem__
+        return -1;
+    }
+
     if (i < 0 || i >= set_len(self)) {
         PyErr_SetString(PyExc_IndexError, "list assignment index out of range");
         return -1;
@@ -949,6 +954,11 @@ set_ass_item(PyOrderedSetObject *self, Py_ssize_t i, PyObject *key)
 static int
 set_ass_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh, PyObject *other)
 {
+    if (other != NULL) {
+        // don't support __setslice__
+        return -1;
+    }
+
     if (ilow < 0)
         ilow = 0;
     else if (ilow > set_len(self))
@@ -958,19 +968,29 @@ set_ass_slice(PyOrderedSetObject *self, Py_ssize_t ilow, Py_ssize_t ihigh, PyObj
     else if (ihigh > set_len(self))
         ihigh = set_len(self);
 
-    ordered_set old_set(self->oset);
-    set_clear_internal(self);
-
-    ordered_set_by_key &old_keyset = old_set.get<key_index>();
-    ordered_set_by_key::iterator it;
-    for (it = old_keyset.begin(); it < old_keyset.begin() + ilow; it++) {
-        ordered_set::value_type entry = *it;
-        set_add_key(self, entry.key);
+    if (other == NULL) {
+        // delete slice
+        ordered_set_by_key &set = self->oset.get<key_index>();
+        ordered_set_by_key::iterator it;
+        for (it = set.begin() + ihigh - 1; it > set.begin() + ilow - 1; it--) {
+            set.erase(it);
+        }
     }
-    set_update_internal(self, other);
-    for (it = old_keyset.begin() + ihigh; it < old_keyset.end(); it++) {
-        ordered_set::value_type entry = *it;
-        set_add_key(self, entry.key);
+    else {
+        ordered_set old_set(self->oset);
+        set_clear_internal(self);
+
+        ordered_set_by_key &old_keyset = old_set.get<key_index>();
+        ordered_set_by_key::iterator it;
+        for (it = old_keyset.begin(); it < old_keyset.begin() + ilow; it++) {
+            ordered_set::value_type entry = *it;
+            set_add_key(self, entry.key);
+        }
+        set_update_internal(self, other);
+        for (it = old_keyset.begin() + ihigh; it < old_keyset.end(); it++) {
+            ordered_set::value_type entry = *it;
+            set_add_key(self, entry.key);
+        }
     }
 
     return 0;
@@ -989,7 +1009,7 @@ set_subscript(PyOrderedSetObject* self, PyObject* item)
         return set_item(self, i);
     }
     else if (PySlice_Check(item)) {
-        Py_ssize_t start, stop, step, slicelength, cur, i;
+        Py_ssize_t start, stop, step, slicelength;
 
         if (PySlice_GetIndicesEx((PySliceObject*)item, set_len(self),
                                  &start, &stop, &step, &slicelength) < 0) {
@@ -997,20 +1017,25 @@ set_subscript(PyOrderedSetObject* self, PyObject* item)
         }
 
         if (slicelength <= 0) {
-            return make_new_set(&PyOrderedSet_Type, NULL);
+            return make_new_set(self->ob_type, NULL);
         }
         else {
-            PyOrderedSetObject *so = (PyOrderedSetObject *)make_new_set(&PyOrderedSet_Type, NULL);
+            PyOrderedSetObject *so = (PyOrderedSetObject *)make_new_set(self->ob_type, NULL);
+            if (so == NULL)
+                return NULL;
+            
             ordered_set_by_key &set = self->oset.get<key_index>();
-            for (cur = start, i = 0; i < slicelength; cur += step, i++) {
-                set.push_back(ordered_set::value_type(set[cur].key));
+            ordered_set_by_key::iterator it;
+            for (it = set.begin() + start; it < set.begin() + stop; it += step) {
+                ordered_set::value_type entry = *it;
+                set_add_key(so, entry.key);
             }
-
+            
             return (PyObject *)so;
         }
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "list indices must be integers");
+        PyErr_SetString(PyExc_TypeError, "indices must be integers");
         return NULL;
     }
 }
