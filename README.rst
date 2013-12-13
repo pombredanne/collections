@@ -2,30 +2,30 @@
 PyOrderedSet
 ===============================
 
-.. image:: https://badge.fury.io/py/PyOrderedSet.png
-    :alt: PyPI version
-    :target: http://badge.fury.io/py/PyOrderedSet
+.. .. image:: https://badge.fury.io/py/PyOrderedSet.png
+..     :alt: PyPI version
+..     :target: http://badge.fury.io/py/PyOrderedSet
 
 .. image:: https://travis-ci.org/bcse/PyOrderedSet.png?branch=master
     :alt: Build Status
     :target: https://travis-ci.org/bcse/PyOrderedSet
 
-.. image:: https://coveralls.io/repos/bcse/PyOrderedSet/badge.png
-    :alt: Coverage Status
-    :target: https://coveralls.io/r/bcse/PyOrderedSet
+.. .. image:: https://coveralls.io/repos/bcse/PyOrderedSet/badge.png
+..     :alt: Coverage Status
+..     :target: https://coveralls.io/r/bcse/PyOrderedSet
 
-.. image:: https://landscape.io/github/bcse/PyOrderedSet/master/landscape.png
-    :alt: Code Health
-    :target: https://landscape.io/github/bcse/PyOrderedSet/master
+.. .. image:: https://landscape.io/github/bcse/PyOrderedSet/master/landscape.png
+..     :alt: Code Health
+..     :target: https://landscape.io/github/bcse/PyOrderedSet/master
 
-.. image:: https://pypip.in/d/PyOrderedSet/badge.png
-    :alt: Downloads
-    :target: https://crate.io/packages/PyOrderedSet?version=latest
+.. .. image:: https://pypip.in/d/PyOrderedSet/badge.png
+..     :alt: Downloads
+..     :target: https://crate.io/packages/PyOrderedSet?version=latest
 
-.. image:: https://cruel-carlota.pagodabox.com/430816d5202dd8dcd04ffca1091894de
-    :target: http://githalytics.com/bcse/PyOrderedSet
+.. .. image:: https://cruel-carlota.pagodabox.com/430816d5202dd8dcd04ffca1091894de
+..     :target: http://githalytics.com/bcse/PyOrderedSet
 
-.. image:: https://d2weczhvl823v0.cloudfront.net/bcse/PyOrderedSet/trend.png
+.. image:: https://d2weczhvl823v0.cloudfront.net/bcse/pyorderedset/trend.png
     :target: https://bitdeli.com/free
 
 
