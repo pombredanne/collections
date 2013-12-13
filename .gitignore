@@ -1,3 +1,16 @@
+*.egg-info
+*.egg
+*.pyc
+*.so
+.DS_Store
 .venv
+/MANIFEST
+/.coverage
+/coverage.xml
+/htmlcov
+/build
+/dist
+/docs
+
 *.xcodeproj
 boost_*
