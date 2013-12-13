@@ -5,7 +5,7 @@ python:
   - "2.7"
 before_install:
   - wget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2
-  - tar xzf boost_1_55_0.tar.bz2
+  - tar -xjf boost_1_55_0.tar.bz2
   - mv boost_1_55_0
   - BOOST_PATH=`pwd`/boost_1_55_0
   - export BOOST_PATH
