@@ -1,0 +1,20 @@
+language: python
+python:
+  - "2.5"
+  - "2.6"
+  - "2.7"
+before_install:
+  - wget http://downloads.sourceforge.net/project/boost/boost/1.55.0/boost_1_55_0.tar.bz2
+  - tar xzf boost_1_55_0.tar.bz2
+  - mv boost_1_55_0
+  - BOOST_PATH=`pwd`/boost_1_55_0
+  - export BOOST_PATH
+install:
+#   - pip install coveralls
+  - python setup.py install
+script:
+  - python test_orderedset.py
+#   - coverage run setup.py test
+#   - coverage report
+# after_script:
+#   coveralls --verbose
