@@ -1,5 +1,6 @@
 from orderedset import orderedset
 
+
 if __name__ == '__main__':
     a = orderedset('abracadabra')
     b = orderedset('ommanipadmehum')
@@ -24,8 +25,8 @@ if __name__ == '__main__':
     from random import randint
     from time import time
 
-    data1 = [randint(1, 100000) for _ in xrange(100000)]
-    data2 = [randint(1, 100000) for _ in xrange(100000)]
+    data1 = [randint(1, 100000) for _ in range(100000)]
+    data2 = [randint(1, 100000) for _ in range(100000)]
 
     t0 = time()
     orderedset(data1)
@@ -96,8 +97,9 @@ if __name__ == '__main__':
 
     a = orderedset(data1)
     len = len(a)
+    b = range(len-1, -1, -1)
     t0 = time()
-    [a.__delitem__(i) for i in xrange(len-1, -1, -1)]
+    [a.__delitem__(i) for i in b]
     t = time() - t0
     print('reversed sequential delete %d items: %fs' % (len, t))
 

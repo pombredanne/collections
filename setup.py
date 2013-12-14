@@ -4,14 +4,14 @@
 import os
 import sys
 
-
-BOOST_PATH = os.environ.get('BOOST_PATH', '.')
-
-
 try:
     from setuptools import setup, Extension
 except ImportError:
     from distutils.core import setup, Extension
+
+
+BOOST_PATH = os.environ.get('BOOST_PATH', '.')
+
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
@@ -32,6 +32,7 @@ setup(
     ext_modules=[
         Extension('orderedset',
             sources=['src/orderedsetmodule.cc', 'src/orderedsetobject.cc'],
+            depends=['src/orderedsetobject.h'],
             include_dirs=[BOOST_PATH]),
         ],
     include_package_data=True,
