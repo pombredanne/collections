@@ -1,5 +1,4 @@
-from orderedset import orderedset
-
+from bcse.collections import orderedset
 
 if __name__ == '__main__':
     a = orderedset('abracadabra')

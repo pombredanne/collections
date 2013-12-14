@@ -6,16 +6,16 @@ static PyMethodDef module_methods[] = {
 };
 
 #if PY_MAJOR_VERSION > 2
-static struct PyModuleDef orderedset_module = {
-        PyModuleDef_HEAD_INIT,
-        "orderedset",
-        NULL,
-        -1,
-        module_methods,
-        NULL,
-        NULL,
-        NULL,
-        NULL
+static struct PyModuleDef collections_module = {
+    PyModuleDef_HEAD_INIT,
+    "collections",
+    NULL,
+    -1,
+    module_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 #endif
 
@@ -25,9 +25,9 @@ static struct PyModuleDef orderedset_module = {
 
 PyMODINIT_FUNC
 #if PY_MAJOR_VERSION > 2
-PyInit_orderedset(void)
+PyInit_collections(void)
 #else
-initorderedset(void)
+initcollections(void)
 #endif
 {
     PyObject* m = NULL;
@@ -36,9 +36,9 @@ initorderedset(void)
         goto done;
 
 #if PY_MAJOR_VERSION > 2
-    m = PyModule_Create(&orderedset_module);
+    m = PyModule_Create(&collections_module);
 #else
-    m = Py_InitModule("orderedset", module_methods);
+    m = Py_InitModule("collections", module_methods);
 #endif
 
     if (m == NULL)

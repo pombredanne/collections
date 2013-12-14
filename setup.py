@@ -21,32 +21,33 @@ readme = open('README.rst').read()
 history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 
 setup(
-    name='PyOrderedSet',
+    name='bcse.collections',
     version='0.1.0',
-    description='PyOrderedSet is an ordered collection of unique elements. '
-        'And it\'s implemented based on Boost Multi-index Containers Library.',
+    description='My containers library. Includes orderedset.',
     long_description=readme + '\n\n' + history,
     author='Grey Lee',
     author_email='bcse@bcse.tw',
-    url='https://github.com/bcse/PyOrderedSet',
+    url='https://github.com/bcse/collections',
     ext_modules=[
-        Extension('orderedset',
-            sources=['src/orderedsetmodule.cc', 'src/orderedsetobject.cc'],
+        Extension('bcse.collections',
+            sources=['src/collectionsmodule.cc', 'src/orderedsetobject.cc'],
             depends=['src/orderedsetobject.h'],
             include_dirs=[BOOST_PATH]),
         ],
+    packages=['bcse'],
+    package_dir={'bcse': 'lib'},
     include_package_data=True,
     install_requires=[
     ],
     license="BSD",
     zip_safe=False,
-    keywords='PyOrderedSet',
+    keywords='collections orderedset',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        'Programming Language :: C',
+        'Programming Language :: C++',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.5',
