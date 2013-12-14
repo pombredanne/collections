@@ -4,6 +4,7 @@
 import os
 import sys
 
+
 try:
     from setuptools import setup, Extension
 except ImportError:
@@ -23,19 +24,19 @@ history = open('HISTORY.rst').read().replace('.. :changelog:', '')
 setup(
     name='bcse.collections',
     version='0.1.0',
-    description='My containers library. Includes orderedset.',
+    description='My containers library.',
     long_description=readme + '\n\n' + history,
     author='Grey Lee',
     author_email='bcse@bcse.tw',
     url='https://github.com/bcse/collections',
+    packages=['bcse'],
+    package_dir={'bcse': 'bcse'},
     ext_modules=[
         Extension('bcse.collections',
             sources=['src/collectionsmodule.cc', 'src/orderedsetobject.cc'],
             depends=['src/orderedsetobject.h'],
             include_dirs=[BOOST_PATH]),
-        ],
-    packages=['bcse'],
-    package_dir={'bcse': 'lib'},
+    ],
     include_package_data=True,
     install_requires=[
     ],
@@ -49,6 +50,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: C++',
         'Programming Language :: Python',
+        'Natural Language :: English',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.5',
         'Programming Language :: Python :: 2.6',
