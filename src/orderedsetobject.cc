@@ -1277,7 +1277,7 @@ PyTypeObject PyOrderedSet_Type = {
     0,                          /* tp_itemsize */
     /* methods */
     (destructor)set_dealloc,    /* tp_dealloc */
-    (printfunc)set_print,       /* tp_print */
+    0,                          /* tp_print */
     0,                          /* tp_getattr */
     0,                          /* tp_setattr */
     0,                          /* tp_compare */
