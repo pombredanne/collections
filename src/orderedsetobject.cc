@@ -75,7 +75,7 @@ static PyObject *
 make_new_set(PyTypeObject *type, PyObject *iterable)
 {
     register PyOrderedSetObject *so = NULL;
-    
+
     if (type == &PyOrderedSet_Type) {
         so = (PyOrderedSetObject *)type->tp_alloc(type, 0);
         if (so == NULL)
@@ -84,7 +84,7 @@ make_new_set(PyTypeObject *type, PyObject *iterable)
         ordered_set set;
         so->oset = set;
     }
-    
+
     return (PyObject *)so;
 }
 
@@ -93,7 +93,7 @@ set_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     if (type == &PySet_Type && !_PyArg_NoKeywords("orderedset()", kwds))
         return NULL;
-    
+
     return make_new_set(type, NULL);
 }
 
@@ -101,10 +101,10 @@ static int
 set_init(PyOrderedSetObject *self, PyObject *args, PyObject *kwds)
 {
     PyObject *iterable = NULL;
-    
+
     if (!PyOrderedSet_Check(self))
         return -1;
-    if (!PyArg_UnpackTuple(args, self->ob_type->tp_name, 0, 1, &iterable))
+    if (!PyArg_UnpackTuple(args, Py_TYPE(self)->tp_name, 0, 1, &iterable))
         return -1;
 
     ordered_set set;
