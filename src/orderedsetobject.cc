@@ -17,26 +17,26 @@
 #endif
 
 static int
-set_contains(PyOrderedSetObject *self, PyObject *item)
+set_contains(PyOrderedSetObject *self, PyObject *key)
 {
     long hash;
 
-    hash = PyObject_Hash(item);
+    hash = PyObject_Hash(key);
     if (hash == -1)
         return -1;
 
     if (self->oset.empty())
         return 0;
 
-    internal_set_entry key(item);
-    internal_set::const_iterator it = self->oset.find(key);
+    internal_set_entry entry(key);
+    internal_set::const_iterator it = self->oset.find(entry);
     return it != self->oset.end();
 }
 
 static PyObject *
-set_index(PyOrderedSetObject *self, PyObject *item)
+set_index(PyOrderedSetObject *self, PyObject *key)
 {
-    int contains = set_contains(self, item);
+    int contains = set_contains(self, key);
     if (contains == -1) {
         // key is not hashable
         PyErr_SetString(PyExc_TypeError, "unhashable type");
@@ -44,9 +44,9 @@ set_index(PyOrderedSetObject *self, PyObject *item)
     }
     else if (contains == 1) {
         // key is exists
-        internal_set_entry key(item);
+        internal_set_entry entry(key);
         internal_vector::iterator it;
-        it = std::find(self->olist.begin(), self->olist.end(), key);
+        it = std::find(self->olist.begin(), self->olist.end(), entry);
 
         if (it != self->olist.end()) {
             long n = std::distance(self->olist.begin(), it);
@@ -65,9 +65,9 @@ PyDoc_STRVAR(index_doc,
 "Raises ValueError if the value is not present.");
 
 static int
-set_add_internal(PyOrderedSetObject *self, PyObject *item)
+set_add_internal(PyOrderedSetObject *self, PyObject *key)
 {
-    int contains = set_contains(self, item);
+    int contains = set_contains(self, key);
     if (contains == -1) {
         // key is not hashable
         return -1;
@@ -78,24 +78,24 @@ set_add_internal(PyOrderedSetObject *self, PyObject *item)
     }
     else {
         // key is not exists
-        internal_set_entry key(item);
-        self->oset.insert(key);
-        self->olist.push_back(key);
+        internal_set_entry entry(key);
+        self->oset.insert(entry);
+        self->olist.push_back(entry);
         return 0;
     }
 }
 
 static int
-set_discard_internal(PyOrderedSetObject *self, PyObject *item)
+set_discard_internal(PyOrderedSetObject *self, PyObject *key)
 {
-    int contains = set_contains(self, item);
+    int contains = set_contains(self, key);
     if (contains == 1) {
         // key is exists
-        internal_set_entry key(item);
-        self->oset.erase(key);
+        internal_set_entry entry(key);
+        self->oset.erase(entry);
 
         internal_vector::iterator it;
-        it = std::find(self->olist.begin(), self->olist.end(), key);
+        it = std::find(self->olist.begin(), self->olist.end(), entry);
         self->olist.erase(it);
     }
     return contains;
@@ -418,16 +418,19 @@ set_clear(PyOrderedSetObject *self)
 PyDoc_STRVAR(clear_doc, "Remove all elements from this set.");
 
 static PyObject *
-set_union(PyOrderedSetObject *self, PyObject *other)
+set_union(PyObject *self, PyObject *other)
 {
     if (!PyOrderedSet_Check(self) || !PyObject_IsIterable(other)) {
         Py_INCREF(Py_NotImplemented);
         return Py_NotImplemented;
     }
 
+    PyOrderedSetObject *so;
     PyObject *result;
 
-    result = set_copy(self);
+    so = (PyOrderedSetObject *)self;
+
+    result = set_copy(so);
     if (result == NULL)
         return NULL;
     if (set_update_internal((PyOrderedSetObject *)result, other) == -1)
@@ -443,7 +446,7 @@ PyDoc_STRVAR(union_doc,
 static PyObject *
 set_or(PyOrderedSetObject *self, PyObject *other)
 {
-    return set_union(self, other);
+    return set_union((PyObject *)self, other);
 }
 
 static PyObject *
@@ -460,27 +463,28 @@ set_ior(PyOrderedSetObject *self, PyObject *other)
 }
 
 static PyObject *
-set_intersection(PyOrderedSetObject *self, PyObject *other)
+set_intersection(PyObject *self, PyObject *other)
 {
     if (!PyOrderedSet_Check(self) || !PyObject_IsIterable(other)) {
         Py_INCREF(Py_NotImplemented);
         return Py_NotImplemented;
     }
 
-    PyOrderedSetObject *otherset, *result;
+    PyOrderedSetObject *so, *otherset, *result;
+    so = (PyOrderedSetObject *)self;
 
     if (!PyOrderedSet_Check(other)) {
-        otherset = (PyOrderedSetObject *)make_new_set(Py_TYPE(self), other);
+        otherset = (PyOrderedSetObject *)make_new_set(Py_TYPE(so), other);
         if (otherset == NULL)
             return NULL;
         return set_intersection(self, (PyObject *)otherset);
     }
 
     otherset = (PyOrderedSetObject *)other;
-    result = (PyOrderedSetObject *)make_new_set(Py_TYPE(self), NULL);
+    result = (PyOrderedSetObject *)make_new_set(Py_TYPE(so), NULL);
 
     internal_vector::const_iterator it;
-    for (it = self->olist.begin(); it < self->olist.end(); it++) {
+    for (it = so->olist.begin(); it < so->olist.end(); it++) {
         internal_set_entry entry = *it;
         if (set_contains(otherset, entry.key)) {
             set_add_internal(result, entry.key);
@@ -509,7 +513,7 @@ set_intersection_update(PyOrderedSetObject *self, PyObject *other)
 
     PyObject *tmp;
 
-    tmp = set_intersection(self, other);
+    tmp = set_intersection((PyObject *)self, other);
     if (tmp == NULL)
         return NULL;
     self->oset = ((PyOrderedSetObject *)tmp)->oset;
@@ -523,7 +527,7 @@ PyDoc_STRVAR(intersection_update_doc,
 static PyObject *
 set_and(PyOrderedSetObject *self, PyObject *other)
 {
-    return set_intersection(self, other);
+    return set_intersection((PyObject *)self, other);
 }
 
 static PyObject *
@@ -544,27 +548,28 @@ set_iand(PyOrderedSetObject *self, PyObject *other)
 }
 
 static PyObject *
-set_difference(PyOrderedSetObject *self, PyObject *other)
+set_difference(PyObject *self, PyObject *other)
 {
     if (!PyOrderedSet_Check(self) || !PyObject_IsIterable(other)) {
         Py_INCREF(Py_NotImplemented);
         return Py_NotImplemented;
     }
 
-    PyOrderedSetObject *otherset, *result;
+    PyOrderedSetObject *so, *otherset, *result;
+    so = (PyOrderedSetObject *)self;
 
     if (!PyOrderedSet_Check(other)) {
-        otherset = (PyOrderedSetObject *)make_new_set(Py_TYPE(self), other);
+        otherset = (PyOrderedSetObject *)make_new_set(Py_TYPE(so), other);
         if (otherset == NULL)
             return NULL;
         return set_difference(self, (PyObject *)otherset);
     }
 
     otherset = (PyOrderedSetObject *)other;
-    result = (PyOrderedSetObject *)make_new_set(Py_TYPE(self), NULL);
+    result = (PyOrderedSetObject *)make_new_set(Py_TYPE(so), NULL);
 
     internal_vector::const_iterator it;
-    for (it = self->olist.begin(); it < self->olist.end(); it++) {
+    for (it = so->olist.begin(); it < so->olist.end(); it++) {
         internal_set_entry entry = *it;
         if (!set_contains(otherset, entry.key)) {
             set_add_internal(result, entry.key);
@@ -593,7 +598,7 @@ set_difference_update(PyOrderedSetObject *self, PyObject *other)
 
     PyObject *tmp;
 
-    tmp = set_difference(self, other);
+    tmp = set_difference((PyObject *)self, other);
     if (tmp == NULL)
         return NULL;
     self->oset = ((PyOrderedSetObject *)tmp)->oset;
@@ -607,7 +612,7 @@ PyDoc_STRVAR(difference_update_doc,
 static PyObject *
 set_sub(PyOrderedSetObject *self, PyObject *other)
 {
-    return set_difference(self, other);
+    return set_difference((PyObject *)self, other);
 }
 
 static PyObject *
@@ -629,27 +634,28 @@ set_isub(PyOrderedSetObject *self, PyObject *other)
 }
 
 static PyObject *
-set_symmetric_difference(PyOrderedSetObject *self, PyObject *other)
+set_symmetric_difference(PyObject *self, PyObject *other)
 {
     if (!PyOrderedSet_Check(self) || !PyObject_IsIterable(other)) {
         Py_INCREF(Py_NotImplemented);
         return Py_NotImplemented;
     }
 
-    PyOrderedSetObject *otherset, *result;
+    PyOrderedSetObject *so, *otherset, *result;
     internal_vector::const_iterator it;
+    so = (PyOrderedSetObject *)self;
 
     if (!PyOrderedSet_Check(other)) {
-        otherset = (PyOrderedSetObject *)make_new_set(Py_TYPE(self), other);
+        otherset = (PyOrderedSetObject *)make_new_set(Py_TYPE(so), other);
         if (otherset == NULL)
             return NULL;
         return set_symmetric_difference(self, (PyObject *)otherset);
     }
 
     otherset = (PyOrderedSetObject *)other;
-    result = (PyOrderedSetObject *)make_new_set(Py_TYPE(self), NULL);
+    result = (PyOrderedSetObject *)make_new_set(Py_TYPE(so), NULL);
 
-    for (it = self->olist.begin(); it < self->olist.end(); it++) {
+    for (it = so->olist.begin(); it < so->olist.end(); it++) {
         internal_set_entry entry = *it;
         if (!set_contains(otherset, entry.key)) {
             set_add_internal(result, entry.key);
@@ -658,7 +664,7 @@ set_symmetric_difference(PyOrderedSetObject *self, PyObject *other)
 
     for (it = otherset->olist.begin(); it < otherset->olist.end(); it++) {
         internal_set_entry entry = *it;
-        if (!set_contains(self, entry.key)) {
+        if (!set_contains(so, entry.key)) {
             set_add_internal(result, entry.key);
         }
     }
@@ -685,7 +691,7 @@ set_symmetric_difference_update(PyOrderedSetObject *self, PyObject *other)
 
     PyObject *tmp;
 
-    tmp = set_symmetric_difference(self, other);
+    tmp = set_symmetric_difference((PyObject *)self, other);
     if (tmp == NULL)
         return NULL;
     self->oset = ((PyOrderedSetObject *)tmp)->oset;
@@ -699,7 +705,7 @@ PyDoc_STRVAR(symmetric_difference_update_doc,
 static PyObject *
 set_xor(PyOrderedSetObject *self, PyObject *other)
 {
-    return set_symmetric_difference(self, other);
+    return set_symmetric_difference((PyObject *)self, other);
 }
 
 static PyObject *
@@ -838,6 +844,13 @@ set_richcompare(PyObject *v, PyObject *w, int op)
     return PyObject_RichCompare(vl->olist[i].key, wl->olist[i].key, op);
 }
 
+//static int
+//set_nocmp(PyObject *self, PyObject *other)
+//{
+//  PyErr_SetString(PyExc_TypeError, "cannot compare sets using cmp()");
+//  return -1;
+//}
+
 static PyObject *
 set_add(PyOrderedSetObject *self, PyObject *key)
 {
@@ -902,8 +915,7 @@ set_ass_item(PyOrderedSetObject *self, Py_ssize_t i, PyObject *key)
 
     if (key == NULL) {
         // delete item
-        PyObject *item = self->olist[i].key;
-        set_discard_internal(self, item);
+        set_discard_internal(self, self->olist[i].key);
         return 0;
     }
     else {
@@ -1126,19 +1138,19 @@ static PyMethodDef orderedset_methods[] = {
     {"clear", (PyCFunction)set_clear, METH_NOARGS, clear_doc},
     {"copy", (PyCFunction)set_copy, METH_NOARGS, copy_doc},
     {"discard", (PyCFunction)set_discard, METH_O, discard_doc},
-    // {"difference", (PyCFunction)set_difference, METH_O, difference_doc},
+    {"difference", (PyCFunction)set_difference, METH_O, difference_doc},
     {"difference_update", (PyCFunction)set_difference_update, METH_O, difference_update_doc},
     {"index", (PyCFunction)set_index, METH_O, index_doc},
-    // {"intersection",(PyCFunction)set_intersection, METH_O, intersection_doc},
+    {"intersection",(PyCFunction)set_intersection, METH_O, intersection_doc},
     {"intersection_update",(PyCFunction)set_intersection_update, METH_O, intersection_update_doc},
     {"issubset", (PyCFunction)set_issubset, METH_O, issubset_doc},
     {"issuperset", (PyCFunction)set_issuperset, METH_O, issuperset_doc},
     {"pop", (PyCFunction)set_pop, METH_VARARGS, pop_doc},
     {"__reduce__", (PyCFunction)set_reduce, METH_NOARGS, reduce_doc},
     {"remove", (PyCFunction)set_remove, METH_O, remove_doc},
-    // {"symmetric_difference",(PyCFunction)set_symmetric_difference, METH_O, symmetric_difference_doc},
+    {"symmetric_difference",(PyCFunction)set_symmetric_difference, METH_O, symmetric_difference_doc},
     {"symmetric_difference_update",(PyCFunction)set_symmetric_difference_update, METH_O, symmetric_difference_update_doc},
-    // {"union", (PyCFunction)set_union, METH_O, union_doc},
+    {"union", (PyCFunction)set_union, METH_O, union_doc},
     {"update", (PyCFunction)set_update, METH_O, update_doc},
     {NULL, NULL} /* sentinel */
 };

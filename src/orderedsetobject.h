@@ -33,21 +33,25 @@ struct internal_set_entry {
         int i = PyObject_RichCompareBool(key, other.key, Py_EQ);
         return i > 0;
     }
+
+    long hash() const
+    {
+        return PyObject_Hash(key);
+    }
 };
 
 class py_hash {
 public:
     std::size_t operator()(const internal_set_entry & val) const
     {
-        return PyObject_Hash(val.key);
+        return val.hash();
     }
 };
 
 struct py_equals : std::binary_function<const internal_set_entry&, const internal_set_entry&, bool> {
     bool operator()(first_argument_type lhs, second_argument_type rhs) const
     {
-        int i = PyObject_RichCompareBool(lhs.key, rhs.key, Py_EQ);
-        return i > 0;
+        return lhs == rhs;
     }
 };
 
